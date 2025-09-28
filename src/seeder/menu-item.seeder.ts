@@ -18,11 +18,8 @@ export class MenuItemSeeder {
       // Cà phê
       { name: 'Cà phê sữa', price: 25000, category: 'Cà phê' },
       { name: 'Cà phê đen', price: 20000, category: 'Cà phê' },
-      { name: 'Cà phê trứng', price: 35000, category: 'Cà phê' },
-      { name: 'Cà phê cappuccino', price: 40000, category: 'Cà phê' },
-      { name: 'Cà phê latte', price: 42000, category: 'Cà phê' },
-      { name: 'Cà phê mocha', price: 45000, category: 'Cà phê' },
       { name: 'Cà phê cold brew', price: 50000, category: 'Cà phê' },
+      { name: 'Bạc xỉu', price: 50000, category: 'Cà phê' },
 
       // Trà
       { name: 'Trà đào', price: 30000, category: 'Trà' },
@@ -39,6 +36,15 @@ export class MenuItemSeeder {
       { name: 'Trà sữa thái', price: 40000, category: 'Trà sữa' },
       { name: 'Trà sữa hạt dẻ', price: 45000, category: 'Trà sữa' },
       { name: 'Trà sữa dâu', price: 42000, category: 'Trà sữa' },
+
+      // Topping
+      { name: 'Trà sữa trân châu', price: 40000, category: 'Trà sữa' },
+      { name: 'Trà sữa matcha', price: 42000, category: 'Trà sữa' },
+      { name: 'Trà sữa socola', price: 42000, category: 'Trà sữa' },
+      { name: 'Trà sữa thái', price: 40000, category: 'Trà sữa' },
+      { name: 'Trà sữa hạt dẻ', price: 45000, category: 'Trà sữa' },
+      { name: 'Trà sữa dâu', price: 42000, category: 'Trà sữa' },
+
 
       // Sinh tố
       { name: 'Sinh tố bơ', price: 35000, category: 'Sinh tố' },

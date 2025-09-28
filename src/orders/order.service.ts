@@ -3,6 +3,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -11,6 +12,7 @@ import { OrderItem } from './order-item.entity';
 import { TableService } from '../tables/table.service';
 import { MenuItem } from '../menu/menu-item.entity';
 import { RevenueQueryDto } from './dto/revenue-query.dto';
+import { Table } from 'src/tables/table.entity';
 
 type OrderItemInput = { menuItemId: number; quantity: number };
 
@@ -34,11 +36,19 @@ function makeDateRange(from?: string, to?: string) {
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
+    @InjectRepository(Order)
+    private readonly orderRepo: Repository<Order>,
+
     @InjectRepository(OrderItem)
     private readonly itemRepo: Repository<OrderItem>,
-    @InjectRepository(MenuItem) private readonly menuRepo: Repository<MenuItem>,
+
+    @InjectRepository(MenuItem)
+    private readonly menuRepo: Repository<MenuItem>,
+
     private readonly tableService: TableService,
+
+    @InjectRepository(Table)
+    private readonly tableRepo: Repository<Table>,
   ) {}
 
   // Lấy order "đang hoạt động" (chưa thanh toán) của 1 bàn
@@ -100,6 +110,13 @@ export class OrderService {
     return this.orderRepo.findOne({
       where: { id: saved.id },
       relations: ['items', 'items.menuItem', 'table'],
+    });
+  }
+
+  async findAll(sort: 'asc' | 'desc' = 'asc') {
+    return this.orderRepo.find({
+      relations: ['table', 'items', 'items.menuItem'],
+      order: { createdAt: sort.toUpperCase() as 'ASC' | 'DESC' },
     });
   }
 
@@ -237,5 +254,53 @@ export class OrderService {
         totalAmount,
       };
     });
+  }
+
+  async confirmPayment(orderId: number) {
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(`Order is already ${order.status}`);
+    }
+
+    order.status = OrderStatus.PAID;
+    return await this.orderRepo.save(order);
+  }
+
+  // async cancelOrder(orderId: number, reason?: string) {
+  //   const order = await this.orderRepo.findOne({ where: { id: orderId } });
+  //   if (!order) {
+  //     throw new NotFoundException(`Order ${orderId} not found`);
+  //   }
+  //   if (order.status !== OrderStatus.PENDING) {
+  //     throw new BadRequestException(`Order is already ${order.status}`);
+  //   }
+
+  //   order.status = OrderStatus.CANCELLED;
+  //   return await this.orderRepo.save(order);
+  // }
+
+  async cancelOrder(id: number, reason: string) {
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['table'], // nhớ load quan hệ với table
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.status = OrderStatus.CANCELLED;
+    order.cancelReason = reason;
+    order.cancelledAt = new Date();
+    await this.orderRepo.save(order);
+
+    // update bàn về trạng thái available
+    if (order.table) {
+      order.table.isAvailable = true;
+      await this.tableRepo.save(order.table);
+    }
+
+    return order;
   }
 }

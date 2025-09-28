@@ -7,10 +7,12 @@ import {
   Patch,
   Get,
   ParseIntPipe,
+  Query
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { CancelOrderDto } from './dto/cancel-order.dto';
 
 @Controller('orders')
 export class OrderController {
@@ -20,6 +22,11 @@ export class OrderController {
   @Post()
   create(@Body() body: CreateOrderDto) {
     return this.orderService.createOrder(body.tableId, body.items);
+  }
+
+  @Get()
+  findAll(@Query('sort') sort: 'asc' | 'desc' = 'asc') {
+    return this.orderService.findAll(sort);
   }
 
   // Cập nhật items của order hiện có
@@ -55,5 +62,18 @@ export class OrderController {
   @Get(':id')
   getOne(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.getOrderById(id);
+  }
+
+  @Post(':id/confirm-payment')
+  async confirmPayment(@Param('id') id: number) {
+    return this.orderService.confirmPayment(id);
+  }
+
+  @Post(':id/cancel')
+  async cancelOrder(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() cancelDto: CancelOrderDto,
+  ) {
+    return this.orderService.cancelOrder(id, cancelDto.reason);
   }
 }

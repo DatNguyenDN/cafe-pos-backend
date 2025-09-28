@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { User } from './users/user.entity';
@@ -14,17 +14,18 @@ import { Order } from 'src/orders/order.entity';
 import { OrderItem } from 'src/orders/order-item.entity';
 import { TableModule } from 'src/tables/table.module';
 import { OrderModule } from 'src/orders/order.module';
+import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '127.0.0.1',
-      port: 3306,
-      username: 'root',
-      password: 'root',
-      database: 'cafe_pos',
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT, 10),
+      username: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
       entities: [User, Attendance, MenuItem, Table, Order, OrderItem],
       synchronize: true,
     }),
@@ -37,4 +38,8 @@ import { OrderModule } from 'src/orders/order.module';
     OrderModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
